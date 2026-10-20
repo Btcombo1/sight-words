@@ -1,0 +1,70 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sight Words</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#fff8e1;margin:0;text-align:center;color:#333}
+h1{margin:12px 0 4px;font-size:28px}
+.sets button{font-size:18px;margin:4px;padding:10px 14px;border-radius:12px;border:2px solid #ffb300;background:#fff}
+.sets button.on{background:#ffb300;color:#fff}
+#word{font-size:110px;font-weight:bold;margin:30px 0 10px;color:#1565c0;min-height:130px}
+.big{font-size:26px;padding:18px 26px;margin:8px;border:none;border-radius:20px;color:#fff;cursor:pointer}
+#hear{background:#43a047}#say{background:#e53935}#next{background:#1e88e5}#prev{background:#8e24aa}
+#msg{font-size:32px;min-height:50px;margin:14px}
+#stars{font-size:30px;margin:8px}
+#grid{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:700px;margin:16px auto}
+#grid span{padding:6px 10px;border-radius:8px;background:#eee;font-size:18px}
+#grid span.ok{background:#c8e6c9}
+small{color:#777}
+</style></head><body>
+<h1>⭐ Sight Words ⭐</h1>
+<div class="sets" id="sets"></div>
+<div id="word"></div>
+<div>
+<button class="big" id="prev">◀</button>
+<button class="big" id="hear">🔊 Hear it</button>
+<button class="big" id="say">🎤 Say it</button>
+<button class="big" id="next">▶</button>
+</div>
+<div style="margin:10px"><input id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type it here" style="font-size:40px;width:280px;text-align:center;border:3px solid #1e88e5;border-radius:14px;padding:6px"> <button class="big" id="check" style="background:#fb8c00">⌨️ Check</button></div>
+<div id="msg"></div>
+<div id="stars"></div>
+<div id="grid"></div>
+<p><button onclick="resetAll()" style="font-size:14px">Reset progress</button></p>
+<small>Works best in Chrome or Edge. Allow the microphone when asked.</small>
+<script>
+const SETS={"1st Nine Weeks":["of","where","was","said","what","they","some","been"],
+"2nd Nine Weeks":["down","could","their","your","about","which","only","good","would","through"],
+"3rd Nine Weeks":["were","who","now","two","out","there"],
+"4th Nine Weeks":["one","people","new","other","water"]};
+SETS["All Words"]=Object.values(SETS).flat();
+// words that sound the same, so speech recognition counts them
+const SOUNDS={two:["to","too","2"],their:["there","they're"],there:["their","they're"],one:["won","1"],would:["wood"],which:["witch"],been:["bin","ben"],new:["knew","gnu"],your:["you're","yore"],where:["wear","ware"],through:["threw","thru"],some:["sum"],of:["off"],down:["down"],now:["now"],out:["out"]};
+let typed=JSON.parse(localStorage.getItem("sw_typed")||"{}");let set="1st Nine Weeks",i=0,done=JSON.parse(localStorage.getItem("sw_done")||"{}");
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("sw_done",JSON.stringify(done))}
+function drawSets(){$("sets").innerHTML="";for(const k in SETS){const b=document.createElement("button");b.textContent=k;if(k==set)b.className="on";b.onclick=()=>{set=k;i=0;show()};$("sets").appendChild(b)}}
+function show(){drawSets();const w=SETS[set][i];$("word").textContent=w;$("typed").value="";$("msg").textContent="";
+$("stars").textContent=SETS[set].filter(x=>done[x]).length+" / "+SETS[set].length+" learned";
+$("grid").innerHTML="";SETS[set].forEach((x,n)=>{const s=document.createElement("span");s.textContent=x;if(done[x])s.className="ok";if(typed[x])s.textContent=x+" ✍️";s.onclick=()=>{i=n;show()};$("grid").appendChild(s)})}
+function speak(t,cb){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.8;u.onend=cb||null;speechSynthesis.speak(u)}
+$("hear").onclick=()=>speak($("word").textContent);
+$("next").onclick=()=>{i=(i+1)%SETS[set].length;show()};
+$("prev").onclick=()=>{i=(i-1+SETS[set].length)%SETS[set].length;show()};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+$("say").onclick=()=>{
+ if(!SR){$("msg").textContent="This browser can't listen. Try Chrome.";return}
+ const w=$("word").textContent.toLowerCase();const r=new SR();r.lang="en-US";r.maxAlternatives=5;r.interimResults=false;
+ $("msg").textContent="👂 Listening... say the word!";
+ r.onresult=e=>{let heard=[];for(const a of e.results[0])heard.push(a.transcript.toLowerCase().trim());
+  const ok=heard.some(h=>h.split(/\s+/).some(t=>{t=t.replace(/[^a-z0-9']/g,"");return t==w||(SOUNDS[w]||[]).includes(t)}));
+  if(ok){done[w]=true;save();$("msg").textContent="🎉 Great job! You said \""+w+"\"!";speak("Great job! "+w,()=>setTimeout(()=>{$("next").click()},600));show();$("msg").textContent="🎉 Great job!"}
+  else{$("msg").textContent="I heard \""+heard[0]+"\". Let's try again!";speak("Try again. This word is "+w)}};
+ r.onerror=e=>{$("msg").textContent=e.error=="not-allowed"?"Please allow the microphone.":"I didn't hear you. Tap Say it and try again."};
+ r.start()};
+$("check").onclick=()=>{const w=$("word").textContent.toLowerCase(),t=$("typed").value.trim().toLowerCase();
+ if(!t){$("msg").textContent="Type the word first!";return}
+ if(t==w){typed[w]=true;localStorage.setItem("sw_typed",JSON.stringify(typed));$("msg").textContent="🎉 You spelled it!";speak("You spelled it! "+w.split("").join(" ")+". "+w,()=>setTimeout(()=>$("next").click(),600))}
+ else{$("msg").textContent="Almost! Look at the word and try again.";speak("Almost. "+w+" is spelled "+w.split("").join(" "))}};
+$("typed").addEventListener("keydown",e=>{if(e.key=="Enter")$("check").click()});
+function resetAll(){if(confirm("Clear all stars?")){done={};typed={};localStorage.removeItem("sw_typed");save();show()}}
+show();
+</script></body></html>
