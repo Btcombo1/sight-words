@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sight Words</title>
+<title>Cooper's Sight Words</title>
 <style>
 body{font-family:Arial,Helvetica,sans-serif;background:#fff8e1;margin:0;text-align:center;color:#333}
 h1{margin:12px 0 4px;font-size:28px}
@@ -15,7 +15,7 @@ h1{margin:12px 0 4px;font-size:28px}
 #grid span.ok{background:#c8e6c9}
 small{color:#777}
 </style></head><body>
-<h1>⭐ Sight Words ⭐</h1>
+<h1>⭐ Cooper's Sight Words ⭐</h1>
 <div class="sets" id="sets"></div>
 <div id="word"></div>
 <div>
@@ -56,13 +56,13 @@ $("say").onclick=()=>{
  $("msg").textContent="👂 Listening... say the word!";
  r.onresult=e=>{let heard=[];for(const a of e.results[0])heard.push(a.transcript.toLowerCase().trim());
   const ok=heard.some(h=>h.split(/\s+/).some(t=>{t=t.replace(/[^a-z0-9']/g,"");return t==w||(SOUNDS[w]||[]).includes(t)}));
-  if(ok){done[w]=true;save();$("msg").textContent="🎉 Great job! You said \""+w+"\"!";speak("Great job! "+w,()=>setTimeout(()=>{$("next").click()},600));show();$("msg").textContent="🎉 Great job!"}
+  if(ok){done[w]=true;save();$("msg").textContent="🎉 Great job! You said \""+w+"\"!";speak("Great job Cooper! "+w,()=>setTimeout(()=>{$("next").click()},600));show();$("msg").textContent="🎉 Great job!"}
   else{$("msg").textContent="I heard \""+heard[0]+"\". Let's try again!";speak("Try again. This word is "+w)}};
  r.onerror=e=>{$("msg").textContent=e.error=="not-allowed"?"Please allow the microphone.":"I didn't hear you. Tap Say it and try again."};
  r.start()};
 $("check").onclick=()=>{const w=$("word").textContent.toLowerCase(),t=$("typed").value.trim().toLowerCase();
  if(!t){$("msg").textContent="Type the word first!";return}
- if(t==w){typed[w]=true;localStorage.setItem("sw_typed",JSON.stringify(typed));$("msg").textContent="🎉 You spelled it!";speak("You spelled it! "+w.split("").join(" ")+". "+w,()=>setTimeout(()=>$("next").click(),600))}
+ if(t==w){typed[w]=true;localStorage.setItem("sw_typed",JSON.stringify(typed));$("msg").textContent="🎉 You spelled it!";speak("You spelled it Cooper! "+w.split("").join(" ")+". "+w,()=>setTimeout(()=>$("next").click(),600))}
  else{$("msg").textContent="Almost! Look at the word and try again.";speak("Almost. "+w+" is spelled "+w.split("").join(" "))}};
 $("typed").addEventListener("keydown",e=>{if(e.key=="Enter")$("check").click()});
 function resetAll(){if(confirm("Clear all stars?")){done={};typed={};localStorage.removeItem("sw_typed");save();show()}}
